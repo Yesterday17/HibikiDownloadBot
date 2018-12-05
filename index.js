@@ -5,14 +5,14 @@ const bot = new Telegraf(process.env.HIBIKI_DOWNLOAD_BOT_KEY, {
 });
 
 bot.command("hibiki", ctx => {
-  const id: string = ctx.message.text.slice(8);
+  const id = ctx.message.text.slice(8);
   request.get(
     `https://vcms-api.hibiki-radio.jp/api/v1/videos/play_check?video_id=${id}`,
     {
       headers: {
         "X-Requested-With": "XMLHttpRequest"
       }
-    },
+    },\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     (err, res, body) => {
       ctx.replyWithVideo({
         source: createReadStream(`${id}.mp4`)
