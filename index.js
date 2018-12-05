@@ -36,7 +36,7 @@ bot.command("hibiki", ctx => {
             .then(message => (downloadMessage = message));
         })
         .on("progress", function(progress) {
-          if (downloadMessage && progress.percent - limitPercent > 1) {
+          if (downloadMessage && progress.percent - limitPercent > 5) {
             ctx.telegram.editMessageText(
               downloadMessage.chat.id,
               downloadMessage.message_id,
