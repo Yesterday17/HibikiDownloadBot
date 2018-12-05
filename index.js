@@ -1,6 +1,7 @@
 const Telegraf = require("telegraf");
 const request = require("request");
 const ffmpeg = require("fluent-ffmpeg");
+const fs = require("fs");
 
 const bot = new Telegraf(process.env.HIBIKI_DOWNLOAD_BOT_KEY, {
   username: "HibikiDownloadBot"
@@ -17,7 +18,7 @@ bot.command("hibiki", ctx => {
     },
     (err, res, body) => {
       ctx.replyWithVideo({
-        source: createReadStream(`${id}.mp4`)
+        source: fs.createReadStream(`${id}.mp4`)
       });
       return;
 
