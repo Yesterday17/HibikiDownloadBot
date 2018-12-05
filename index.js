@@ -1,4 +1,4 @@
-const Telgraf = require("telegraf");
+const Telegraf = require("telegraf");
 
 const bot = new Telegraf(process.env.HIBIKI_DOWNLOAD_BOT_KEY, {
   username: "HibikiDownloadBot"
