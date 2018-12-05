@@ -37,6 +37,9 @@ bot.command("hibiki", ctx => {
           ctx.reply(`下载中... ${Math.trunc(progress.percent)}%`);
           pastPercent = Math.trunc(progress.percent);
         })
+        .on("error", function(err, stdout, stderr) {
+          ctx.reply(`无法下载! ${err.message}`);
+        })
         .on("end", () => {
           ctx.reply(`下载成功！`);
           ctx.replyWithVideo({
