@@ -28,6 +28,7 @@ bot.command("hibiki", ctx => {
       let pastPercent = -10;
       ffmpeg()
         .input(reply.playlist_url)
+        .outputOptions("-strict -2")
         .on("start", () => {
           ctx.reply(`开始下载……`);
           console.log(`开始下载……`);
