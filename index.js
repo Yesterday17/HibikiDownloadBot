@@ -17,11 +17,6 @@ bot.command("hibiki", ctx => {
       }
     },
     (err, res, body) => {
-      ctx.replyWithVideo({
-        source: fs.createReadStream(`${id}.mp4`)
-      });
-      return;
-
       const reply = JSON.parse(body);
       if (!reply.playlist_url) {
         ctx.reply(
