@@ -31,7 +31,7 @@ bot.command("hibiki", ctx => {
         .outputOptions("-strict -2")
         .on("start", () => {
           ctx.reply(`开始下载……`);
-          ctx.reply(`下载中...`).then(message => (downloadMessage = message));
+          ctx.reply(`下载进度: `).then(message => (downloadMessage = message));
         })
         .on("progress", function(progress) {
           if (downloadMessage) {
@@ -39,15 +39,27 @@ bot.command("hibiki", ctx => {
               downloadMessage.chat.id,
               downloadMessage.message_id,
               null,
-              progress.percent.toString()
+              `下载进度: ${progress.percent.toFixed(2)}`
             );
           }
         })
         .on("error", function(err, stdout, stderr) {
-          ctx.reply(`无法下载! ${stderr.message}`);
+          ctx.telegram.editMessageText(
+            downloadMessage.chat.id,
+            downloadMessage.message_id,
+            null,
+            `下载失败！错误: ${stderr.message}`
+          );
         })
         .on("end", () => {
-          ctx.reply(`下载成功！`);
+          if (downloadMessage) {
+            ctx.telegram.editMessageText(
+              downloadMessage.chat.id,
+              downloadMessage.message_id,
+              null,
+              "下载成功！"
+            );
+          }
           ctx.replyWithVideo({
             source: fs.createReadStream(`${id}.mp4`)
           });
