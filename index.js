@@ -12,7 +12,7 @@ bot.command("hibiki", ctx => {
       headers: {
         "X-Requested-With": "XMLHttpRequest"
       }
-    },\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    },
     (err, res, body) => {
       ctx.replyWithVideo({
         source: createReadStream(`${id}.mp4`)
