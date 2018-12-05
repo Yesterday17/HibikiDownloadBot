@@ -25,18 +25,23 @@ bot.command("hibiki", ctx => {
         return;
       }
       ctx.reply(`成功获取 Playlist 地址: \n${reply.playlist_url}`);
-      let pastPercent = -10;
+      let downloadMessage;
       ffmpeg()
         .input(reply.playlist_url)
         .outputOptions("-strict -2")
         .on("start", () => {
           ctx.reply(`开始下载……`);
-          console.log(`开始下载……`);
+          ctx.reply(`下载中...`).then(message => (downloadMessage = message));
         })
         .on("progress", function(progress) {
-          if (Math.trunc(progress.percent) - pastPercent < 5) return;
-          ctx.reply(`下载中... ${Math.trunc(progress.percent)}%`);
-          pastPercent = Math.trunc(progress.percent);
+          if (downloadMessage) {
+            ctx.telegram.editMessageText(
+              downloadMessage.chat.id,
+              downloadMessage.message_id,
+              null,
+              progress.percent.toString()
+            );
+          }
         })
         .on("error", function(err, stdout, stderr) {
           ctx.reply(`无法下载! ${stderr.message}`);
