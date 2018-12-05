@@ -1,4 +1,6 @@
 const Telegraf = require("telegraf");
+const request = require("request");
+const ffmpeg = require("fluent-ffmpeg");
 
 const bot = new Telegraf(process.env.HIBIKI_DOWNLOAD_BOT_KEY, {
   username: "HibikiDownloadBot"
