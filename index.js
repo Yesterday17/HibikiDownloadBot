@@ -49,3 +49,5 @@ bot.command("hibiki", ctx => {
     }
   );
 });
+
+bot.startPolling();
