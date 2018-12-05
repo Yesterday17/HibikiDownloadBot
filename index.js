@@ -44,7 +44,7 @@ bot.command("hibiki", ctx => {
         .on("end", () => {
           ctx.reply(`下载成功！`);
           ctx.replyWithVideo({
-            source: createReadStream(`${id}.mp4`)
+            source: fs.createReadStream(`${id}.mp4`)
           });
         })
         .save(`${id}.mp4`);
