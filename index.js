@@ -39,7 +39,7 @@ bot.command("hibiki", ctx => {
               downloadMessage.chat.id,
               downloadMessage.message_id,
               null,
-              `下载进度: ${progress.percent.toFixed(2)}`
+              `下载进度: ${progress.percent.toFixed(2)}%`
             );
           }
         })
