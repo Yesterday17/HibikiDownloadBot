@@ -25,22 +25,25 @@ bot.command("hibiki", ctx => {
         return;
       }
       ctx.reply(`成功获取 Playlist 地址: \n${reply.playlist_url}`);
-      let downloadMessage;
+      let downloadMessage,
+        limitPercent = 0;
       ffmpeg()
         .input(reply.playlist_url)
         .outputOptions("-strict -2")
         .on("start", () => {
-          ctx.reply(`开始下载……`);
-          ctx.reply(`下载进度: `).then(message => (downloadMessage = message));
+          ctx
+            .reply(`开始下载……\n下载进度: `)
+            .then(message => (downloadMessage = message));
         })
         .on("progress", function(progress) {
-          if (downloadMessage) {
+          if (downloadMessage && progress.percent - limitPercent > 1) {
             ctx.telegram.editMessageText(
               downloadMessage.chat.id,
               downloadMessage.message_id,
               null,
-              `下载进度: ${progress.percent.toFixed(2)}%`
+              `开始下载……\n下载进度: ${progress.percent.toFixed(2)}%`
             );
+            limitPercent = progress.percent;
           }
         })
         .on("error", function(err, stdout, stderr) {
