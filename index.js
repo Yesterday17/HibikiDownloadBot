@@ -7,7 +7,7 @@ const bot = new Telegraf(process.env.HIBIKI_DOWNLOAD_BOT_KEY, {
   username: "HibikiDownloadBot"
 });
 
-function download(id, url) {
+function download(id, url, ctx) {
   let downloadMessage,
     limitPercent = 0;
   ffmpeg()
@@ -53,15 +53,20 @@ function download(id, url) {
         );
       }
 
-      sendVideo(id, ctx.replyWithVideo);
-      ctx.replyWithVideo({ source: fs.createReadStream(`${id}.mp4`) });
+      sendVideo(id, ctx);
     })
     .save(`./run/${id}.mp4`);
 }
 
-function sendVideo(id, sendFunction) {
+function sendVideo(id, ctx) {
   ffmpeg.ffprobe(`./run/${id}.mp4`, function(err, data) {
-    console.log(data.format.size / 1024 / 1024);
+    const size = data.format.size / 1024 / 1024;
+    ctx.reply(`文件大小：${size}M`);
+    if (size < 49.5) {
+      ctx.replyWithVideo({ source: fs.createReadStream(`${id}.mp4`) });
+    } else {
+      // split
+    }
   });
 }
 
@@ -83,7 +88,7 @@ bot.command("hibiki", ctx => {
         return;
       }
       ctx.reply(`成功获取 Playlist 地址: \n${reply.playlist_url}`);
-      download(id, reply.playlist_url);
+      download(id, reply.playlist_url, ctx);
     }
   );
 });
