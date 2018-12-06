@@ -61,7 +61,7 @@ function download(id, url, ctx) {
 function sendVideo(id, ctx) {
   ffmpeg.ffprobe(`./run/${id}.mp4`, function(err, data) {
     const size = data.format.size / 1024 / 1024;
-    ctx.reply(`文件大小：${size}M`);
+    ctx.reply(`文件大小：${size.toFixed(2)}M`);
     if (size < 49.5) {
       ctx.replyWithVideo({ source: fs.createReadStream(`./run/${id}.mp4`) });
     } else {
