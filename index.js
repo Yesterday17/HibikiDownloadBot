@@ -63,7 +63,7 @@ function sendVideo(id, ctx) {
     const size = data.format.size / 1024 / 1024;
     ctx.reply(`文件大小：${size}M`);
     if (size < 49.5) {
-      ctx.replyWithVideo({ source: fs.createReadStream(`${id}.mp4`) });
+      ctx.replyWithVideo({ source: fs.createReadStream(`./run/${id}.mp4`) });
     } else {
       // split
     }
