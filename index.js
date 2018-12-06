@@ -7,6 +7,64 @@ const bot = new Telegraf(process.env.HIBIKI_DOWNLOAD_BOT_KEY, {
   username: "HibikiDownloadBot"
 });
 
+function download(id, url) {
+  let downloadMessage,
+    limitPercent = 0;
+  ffmpeg()
+    .input(url)
+    .videoCodec("libx264")
+    .videoBitrate(1000)
+    .audioCodec("libmp3lame")
+    .withAudioBitrate("128k")
+    .outputOptions("-strict -2")
+    .on("start", () => {
+      ctx
+        .reply(`开始下载……\n下载进度: `)
+        .then(message => (downloadMessage = message));
+    })
+    .on("progress", function(progress) {
+      if (downloadMessage && progress.percent - limitPercent > 5) {
+        ctx.telegram.editMessageText(
+          downloadMessage.chat.id,
+          downloadMessage.message_id,
+          null,
+          `开始下载……\n下载进度: ${progress.percent.toFixed(2)}%`
+        );
+        limitPercent = progress.percent;
+      }
+    })
+    .on("error", function(err, stdout, stderr) {
+      if (downloadMessage) {
+        ctx.telegram.editMessageText(
+          downloadMessage.chat.id,
+          downloadMessage.message_id,
+          null,
+          `下载失败！错误: ${stderr.message}`
+        );
+      }
+    })
+    .on("end", () => {
+      if (downloadMessage) {
+        ctx.telegram.editMessageText(
+          downloadMessage.chat.id,
+          downloadMessage.message_id,
+          null,
+          "下载成功！"
+        );
+      }
+
+      sendVideo(id, ctx.replyWithVideo);
+      ctx.replyWithVideo({ source: fs.createReadStream(`${id}.mp4`) });
+    })
+    .save(`./run/${id}.mp4`);
+}
+
+function sendVideo(id, sendFunction) {
+  ffmpeg.ffprobe(`./run/${id}.mp4`, function(err, data) {
+    console.log(data.format.size / 1024 / 1024);
+  });
+}
+
 bot.command("hibiki", ctx => {
   const id = ctx.message.text.slice(8);
   request.get(
@@ -25,49 +83,7 @@ bot.command("hibiki", ctx => {
         return;
       }
       ctx.reply(`成功获取 Playlist 地址: \n${reply.playlist_url}`);
-      let downloadMessage,
-        limitPercent = 0;
-      ffmpeg()
-        .input(reply.playlist_url)
-        .outputOptions("-strict -2")
-        .on("start", () => {
-          ctx
-            .reply(`开始下载……\n下载进度: `)
-            .then(message => (downloadMessage = message));
-        })
-        .on("progress", function(progress) {
-          if (downloadMessage && progress.percent - limitPercent > 5) {
-            ctx.telegram.editMessageText(
-              downloadMessage.chat.id,
-              downloadMessage.message_id,
-              null,
-              `开始下载……\n下载进度: ${progress.percent.toFixed(2)}%`
-            );
-            limitPercent = progress.percent;
-          }
-        })
-        .on("error", function(err, stdout, stderr) {
-          ctx.telegram.editMessageText(
-            downloadMessage.chat.id,
-            downloadMessage.message_id,
-            null,
-            `下载失败！错误: ${stderr.message}`
-          );
-        })
-        .on("end", () => {
-          if (downloadMessage) {
-            ctx.telegram.editMessageText(
-              downloadMessage.chat.id,
-              downloadMessage.message_id,
-              null,
-              "下载成功！"
-            );
-          }
-          ctx.replyWithVideo({
-            source: fs.createReadStream(`${id}.mp4`)
-          });
-        })
-        .save(`${id}.mp4`);
+      download(id, reply.playlist_url);
     }
   );
 });
