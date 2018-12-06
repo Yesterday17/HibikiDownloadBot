@@ -71,7 +71,7 @@ function sendVideo(id, ctx) {
 }
 
 bot.command("hibiki", ctx => {
-  const id = ctx.message.text.slice(8);
+  const id = ctx.message.text.split(" ")[1];
   request.get(
     `https://vcms-api.hibiki-radio.jp/api/v1/videos/play_check?video_id=${id}`,
     {
