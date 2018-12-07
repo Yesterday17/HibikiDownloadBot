@@ -19,7 +19,9 @@ bot.onText(/\/playlist(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
   const play = await getPlaylistUrl(match![0]);
 
   if (play.error !== "") {
-    bot.sendMessage(msg.chat.id, play.error);
+    bot.sendMessage(msg.chat.id, play.error, {
+      reply_to_message_id: msg.message_id
+    });
     return;
   }
 
@@ -34,6 +36,7 @@ bot.onText(/\/playlist(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
 
 bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
   const id: string = match![0];
+  console.log(id);
   const play = await getPlaylistUrl(id);
 
   if (play.error !== "") {
