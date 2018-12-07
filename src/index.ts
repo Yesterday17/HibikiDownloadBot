@@ -65,6 +65,8 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
     }
   );
 
+  let c_progress = 0;
+
   const start = () => {
     bot.editMessageText(
       generateDownloadMessage(header, play.url, `开始下载……\n下载进度:0.00%`),
@@ -76,11 +78,14 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
   };
 
   const progress = (progress: any) => {
+    if (progress.percent - c_progress < 10) return;
+
+    c_progress = progress.percent.toFixed(2);
     bot.editMessageText(
       generateDownloadMessage(
         header,
         play.url,
-        `开始下载……\n下载进度: ${progress.percent.toFixed(2)}%`
+        `开始下载……\n下载进度: ${c_progress}%`
       ),
       {
         chat_id: msg_playlist.chat.id,
