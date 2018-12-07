@@ -142,30 +142,24 @@ function generateDownloadMessage(
 async function getPlaylistUrl(
   id: string
 ): Promise<{ error: string; url: string }> {
-  return await request
-    .get(
-      `https://vcms-api.hibiki-radio.jp/api/v1/videos/play_check?video_id=${id}`,
-      {
-        headers: {
-          "X-Requested-With": "XMLHttpRequest"
-        }
+  const body = await request.get(
+    `https://vcms-api.hibiki-radio.jp/api/v1/videos/play_check?video_id=${id}`,
+    {
+      headers: {
+        "X-Requested-With": "XMLHttpRequest"
       }
-    )
-    .then(body => {
-      const reply = JSON.parse(body);
-      if (!reply.playlist_url) {
-        return {
-          error: `无法获取下载地址!!!\nID: ${id}\n错误信息: ${
-            reply.error_message
-          }`,
-          url: ""
-        };
-      }
-      return { error: "", url: reply.playlist_url };
-    })
-    .catch(error => {
-      return { error: error, url: "" };
-    });
+    }
+  );
+  if (!body) return { error: "发生错误！", url: "" };
+
+  const reply = JSON.parse(body);
+  if (!reply.playlist_url) {
+    return {
+      error: `无法获取下载地址!!!\nID: ${id}\n错误信息: ${reply.error_message}`,
+      url: ""
+    };
+  }
+  return { error: "", url: reply.playlist_url };
 }
 
 function download(
