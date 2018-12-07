@@ -16,12 +16,12 @@
     "node-telegram-bot-api": "^0.30.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
+    "socks5-https-client": "^1.2.1",
     "typescript": "^3.2.2"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.8",
     "@types/node-telegram-bot-api": "^0.30.3",
-    "@types/request": "^2.48.1",
     "@types/request-promise": "^4.1.42"
   }
 }

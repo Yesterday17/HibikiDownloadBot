@@ -3,6 +3,11 @@ import ffmpeg from "fluent-ffmpeg";
 import TelegramBot from "node-telegram-bot-api";
 import { createReadStream } from "fs";
 
+const socks5 = new (require("socks5-https-client/lib/Agent"))({
+  socksHost: "127.0.0.1",
+  socksPort: "1080"
+});
+
 if (process.env.HIBIKI_DOWNLOAD_BOT_KEY === undefined) {
   console.error(
     "Error: Environmental variable HIBIKI_DOWNLOAD_BOT_KEY is required."
@@ -11,13 +16,19 @@ if (process.env.HIBIKI_DOWNLOAD_BOT_KEY === undefined) {
 }
 
 const header = `HibikiDownloadBot v1.0.0`;
-const bot = new TelegramBot(process.env.HIBIKI_DOWNLOAD_BOT_KEY!, {
-  polling: true
-});
+const options: TelegramBot.ConstructorOptions = process.env.DEBUG
+  ? {
+      polling: true,
+      request: {
+        url: "",
+        agent: socks5
+      }
+    }
+  : { polling: true };
+const bot = new TelegramBot(process.env.HIBIKI_DOWNLOAD_BOT_KEY!, options);
 
 bot.onText(/\/playlist(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
-  console.log(match);
-  const play = await getPlaylistUrl(match![0]);
+  const play = await getPlaylistUrl(match![1]);
 
   if (play.error !== "") {
     bot.sendMessage(msg.chat.id, play.error, {
@@ -28,7 +39,7 @@ bot.onText(/\/playlist(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
 
   bot.sendMessage(
     msg.chat.id,
-    `广播ID: ${match![0]}  \nPlaylist 地址: \n${
+    `广播ID: ${match![1]}  \nPlaylist 地址: \n${
       play.url
     }  \n请**尽快**下载以免链接失效！`,
     { parse_mode: "Markdown", reply_to_message_id: msg.message_id }
@@ -37,7 +48,7 @@ bot.onText(/\/playlist(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
 
 bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
   console.log(match);
-  const id: string = match![0];
+  const id: string = match![1];
   const play = await getPlaylistUrl(id);
 
   if (play.error !== "") {
@@ -142,13 +153,15 @@ function generateDownloadMessage(
 async function getPlaylistUrl(
   id: string
 ): Promise<{ error: string; url: string }> {
+  console.log(
+    `https://vcms-api.hibiki-radio.jp/api/v1/videos/play_check?video_id=${id}`
+  );
   const body = await request.get(
     `https://vcms-api.hibiki-radio.jp/api/v1/videos/play_check?video_id=${id}`,
     {
       headers: {
         "X-Requested-With": "XMLHttpRequest"
-      },
-      timeout: 2000
+      }
     }
   );
   if (!body) return { error: "发生错误！", url: "" };
