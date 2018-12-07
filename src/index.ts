@@ -16,6 +16,7 @@ const bot = new TelegramBot(process.env.HIBIKI_DOWNLOAD_BOT_KEY!, {
 });
 
 bot.onText(/\/playlist(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
+  console.log(match);
   const play = await getPlaylistUrl(match![0]);
 
   if (play.error !== "") {
@@ -35,8 +36,8 @@ bot.onText(/\/playlist(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
 });
 
 bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
+  console.log(match);
   const id: string = match![0];
-  console.log(id);
   const play = await getPlaylistUrl(id);
 
   if (play.error !== "") {
