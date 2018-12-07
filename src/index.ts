@@ -39,15 +39,12 @@ bot.onText(/\/playlist(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
 
   bot.sendMessage(
     msg.chat.id,
-    `广播ID: ${match![1]}  \nPlaylist 地址: \n${
-      play.url
-    }  \n请**尽快**下载以免链接失效！`,
+    `广播ID: ${match![1]}\n请尽快[下载](${play.url})以免链接失效!`,
     { parse_mode: "Markdown", reply_to_message_id: msg.message_id }
   );
 });
 
 bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
-  console.log(match);
   const id: string = match![1];
   const play = await getPlaylistUrl(id);
 
@@ -59,7 +56,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
   }
   const msg_playlist = await bot.sendMessage(
     msg.chat.id,
-    generateDownloadMessage(header, `成功获取 Playlist 地址: \n${play.url}`),
+    generateDownloadMessage(header, `成功获取 Playlist 地址!`),
     {
       reply_to_message_id: msg.message_id
     }
@@ -69,7 +66,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
 
   const start = () => {
     bot.editMessageText(
-      generateDownloadMessage(header, play.url, `开始下载……\n下载进度:0.00%`),
+      generateDownloadMessage(header, play.url, `开始下载……\n下载进度: 0.00%`),
       {
         chat_id: msg_playlist.chat.id,
         message_id: msg_playlist.message_id
@@ -111,7 +108,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
           header,
           play.url,
           `下载成功!`,
-          `文件大小: ${size}M`
+          `文件大小: ${size.toFixed(2)}M`
         ),
         {
           chat_id: msg_playlist.chat.id,
@@ -130,7 +127,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
       generateDownloadMessage(
         header,
         play.url,
-        `下载失败！错误: ${stderr.message}`
+        `下载失败! 错误: ${stderr.message}`
       ),
       {
         chat_id: msg_playlist.chat.id,
@@ -148,7 +145,7 @@ function generateDownloadMessage(
   filesize?: string
 ): string {
   let ans = "";
-  if (header) ans += header;
+  if (header) ans += `${header}`;
   if (playlist) ans += `\n${playlist}`;
   if (progress) ans += `\n${progress}`;
   if (filesize) ans += `\n${filesize}`;
@@ -158,9 +155,6 @@ function generateDownloadMessage(
 async function getPlaylistUrl(
   id: string
 ): Promise<{ error: string; url: string }> {
-  console.log(
-    `https://vcms-api.hibiki-radio.jp/api/v1/videos/play_check?video_id=${id}`
-  );
   const body = await request.get(
     `https://vcms-api.hibiki-radio.jp/api/v1/videos/play_check?video_id=${id}`,
     {
