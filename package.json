@@ -6,9 +6,22 @@
   "repository": "git@github.com:Yesterday17/HibikiDownloadBot.git",
   "author": "Yesterday17 <t@yesterday17.cn>",
   "license": "MIT",
+  "scripts": {
+    "start": "tsc && node dist/index.js"
+  },
   "dependencies": {
     "fluent-ffmpeg": "^2.1.2",
+    "koa": "^2.6.2",
+    "koa-send": "^5.0.0",
+    "node-telegram-bot-api": "^0.30.0",
     "request": "^2.88.0",
-    "telegraf": "^3.25.1"
+    "request-promise": "^4.2.2",
+    "typescript": "^3.2.2"
+  },
+  "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.8",
+    "@types/node-telegram-bot-api": "^0.30.3",
+    "@types/request": "^2.48.1",
+    "@types/request-promise": "^4.1.42"
   }
 }
