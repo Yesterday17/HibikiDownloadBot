@@ -66,7 +66,11 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
 
   const start = () => {
     bot.editMessageText(
-      generateDownloadMessage(header, play.url, `开始下载……\n下载进度: 0.00%`),
+      generateDownloadMessage(
+        header,
+        `成功获取 Playlist 地址!`,
+        `开始下载……\n下载进度: 0.00%`
+      ),
       {
         chat_id: msg_playlist.chat.id,
         message_id: msg_playlist.message_id
@@ -81,7 +85,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
     bot.editMessageText(
       generateDownloadMessage(
         header,
-        play.url,
+        `成功获取 Playlist 地址!`,
         `开始下载……\n下载进度: ${c_progress}%`
       ),
       {
@@ -93,7 +97,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
 
   const end = () => {
     bot.editMessageText(
-      generateDownloadMessage(header, play.url, `下载成功!`),
+      generateDownloadMessage(header, `成功获取 Playlist 地址!`, `下载成功!`),
       {
         chat_id: msg_playlist.chat.id,
         message_id: msg_playlist.message_id
@@ -106,7 +110,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
       bot.editMessageText(
         generateDownloadMessage(
           header,
-          play.url,
+          `成功获取 Playlist 地址!`,
           `下载成功!`,
           `文件大小: ${size.toFixed(2)}M`
         ),
@@ -126,7 +130,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
     bot.editMessageText(
       generateDownloadMessage(
         header,
-        play.url,
+        `成功获取 Playlist 地址!`,
         `下载失败! 错误: ${stderr.message}`
       ),
       {
