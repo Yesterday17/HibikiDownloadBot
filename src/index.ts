@@ -1,7 +1,8 @@
 import request from "request-promise";
 import ffmpeg from "fluent-ffmpeg";
 import TelegramBot from "node-telegram-bot-api";
-import { createReadStream } from "fs";
+import { createReadStream, unlink } from "fs";
+import { host, port } from "./server";
 
 const socks5 = new (require("socks5-https-client/lib/Agent"))({
   socksHost: "127.0.0.1",
@@ -120,9 +121,47 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
         }
       );
       if (size < 49.5) {
-        bot.sendVideo(msg.chat.id, createReadStream(`./run/${id}.mp4`), {});
+        bot
+          .sendVideo(msg.chat.id, createReadStream(`./run/${id}.mp4`), {
+            caption: id,
+            duration: data.format.duration
+          })
+          .then(message => {
+            // TODO: Store video id
+            unlink(`./run/${id}.mp4`, err => {
+              console.error(`Can't remove file: ./run/${id}.mp4`);
+
+              bot.editMessageText(
+                generateDownloadMessage(
+                  header,
+                  `成功获取 Playlist 地址!`,
+                  `下载成功!`,
+                  `文件大小: ${size.toFixed(2)}M`,
+                  `错误：无法移除已经发送至Telegram的本地视频，请通知管理员！`
+                ),
+                {
+                  chat_id: msg_playlist.chat.id,
+                  message_id: msg_playlist.message_id
+                }
+              );
+            });
+          });
       } else {
-        // split
+        // TODO: Split file instead of saving it on server.
+        bot.editMessageText(
+          generateDownloadMessage(
+            header,
+            `成功获取 Playlist 地址!`,
+            `下载成功!`,
+            `文件大小: ${size.toFixed(2)}M`,
+            `文件过大，无法通过 Telegram 直接传输`,
+            `请至 ${host}:${port}/${id}.mp4 下载！`
+          ),
+          {
+            chat_id: msg_playlist.chat.id,
+            message_id: msg_playlist.message_id
+          }
+        );
       }
     });
   };
@@ -142,18 +181,12 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
   download(id, play.url, { start, progress, end, error });
 });
 
-function generateDownloadMessage(
-  header?: string,
-  playlist?: string,
-  progress?: string,
-  filesize?: string
-): string {
+function generateDownloadMessage(...args: string[]): string {
   let ans = "";
-  if (header) ans += `${header}`;
-  if (playlist) ans += `\n${playlist}`;
-  if (progress) ans += `\n${progress}`;
-  if (filesize) ans += `\n${filesize}`;
-  return ans;
+  for (const str of arguments) {
+    ans += `\n${str}`;
+  }
+  return ans.substring(1);
 }
 
 async function getPlaylistUrl(
