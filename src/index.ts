@@ -154,30 +154,23 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
                   }
                 );
               }
-
-              bot.deleteMessage(
-                msg_playlist.chat.id,
-                msg_playlist.message_id.toString()
-              );
             });
           });
       } else {
         // TODO: Split file instead of saving it on server.
-        bot.editMessageText(
-          generateDownloadMessage(
-            header,
-            `成功获取 Playlist 地址!`,
-            `下载成功!`,
-            `文件大小: ${size.toFixed(2)}M`,
-            `文件过大，无法通过 Telegram 直接传输`,
-            `请至 ${host}:${port}/${id}.mp4 下载！`
-          ),
+        bot.sendMessage(
+          msg.chat.id,
+          `文件过大，无法通过 Telegram 直接传输！\n请至 ${host}:${port}/${id}.mp4 下载！`,
           {
-            chat_id: msg_playlist.chat.id,
-            message_id: msg_playlist.message_id
+            reply_to_message_id: msg_playlist.message_id
           }
         );
       }
+
+      bot.deleteMessage(
+        msg_playlist.chat.id,
+        msg_playlist.message_id.toString()
+      );
     });
   };
   const error = (err: any, stdout: any, stderr: any) => {
