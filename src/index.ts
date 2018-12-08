@@ -63,7 +63,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
     }
   );
 
-  let c_progress = 0;
+  let progress_time = 0;
 
   const start = () => {
     bot.editMessageText(
@@ -80,14 +80,14 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
   };
 
   const progress = (progress: any) => {
-    if (progress.percent - c_progress < 10) return;
+    if (Date.now() - progress_time < 2000) return;
 
-    c_progress = progress.percent.toFixed(2);
+    progress_time = Date.now();
     bot.editMessageText(
       generateDownloadMessage(
         header,
         `成功获取 Playlist 地址!`,
-        `开始下载……\n下载进度: ${c_progress}%`
+        `开始下载……\n下载进度: ${progress.percent.toFixed(2)}%`
       ),
       {
         chat_id: msg_playlist.chat.id,
