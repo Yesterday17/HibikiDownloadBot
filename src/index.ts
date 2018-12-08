@@ -154,7 +154,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
                   msg.chat.id,
                   `错误：无法移除已经发送至Telegram的本地视频，请通知管理员！`,
                   {
-                    reply_to_message_id: msg_playlist.message_id
+                    reply_to_message_id: message.message_id
                   }
                 );
               }
@@ -166,7 +166,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
           msg.chat.id,
           `文件过大，无法通过 Telegram 直接传输！\n请至 ${host}:${port}/${id}.mp4 下载！`,
           {
-            reply_to_message_id: msg_playlist.message_id
+            reply_to_message_id: msg.message_id
           }
         );
       }
