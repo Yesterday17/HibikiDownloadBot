@@ -32,13 +32,13 @@ bot.onText(/\/playlist(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
   const play = await getPlaylistUrl(match![1]);
 
   if (play.error !== "") {
-    bot.sendMessage(msg.chat.id, play.error, {
+    await bot.sendMessage(msg.chat.id, play.error, {
       reply_to_message_id: msg.message_id
     });
     return;
   }
 
-  bot.sendMessage(
+  await bot.sendMessage(
     msg.chat.id,
     `广播ID: ${match![1]}\n请尽快[下载](${play.url})以免链接失效!`,
     { parse_mode: "Markdown", reply_to_message_id: msg.message_id }
@@ -50,9 +50,13 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
   const play = await getPlaylistUrl(id);
 
   if (play.error !== "") {
-    bot.sendMessage(msg.chat.id, generateDownloadMessage(header, play.error), {
-      reply_to_message_id: msg.message_id
-    });
+    await bot.sendMessage(
+      msg.chat.id,
+      generateDownloadMessage(header, play.error),
+      {
+        reply_to_message_id: msg.message_id
+      }
+    );
     return;
   }
   const msg_playlist = await bot.sendMessage(
@@ -65,8 +69,8 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
 
   let progress_time = 0;
 
-  const start = () => {
-    bot.editMessageText(
+  const start = async () => {
+    await bot.editMessageText(
       generateDownloadMessage(
         header,
         `成功获取 Playlist 地址!`,
@@ -79,11 +83,11 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
     );
   };
 
-  const progress = (progress: any) => {
+  const progress = async (progress: any) => {
     if (Date.now() - progress_time < 2000) return;
 
     progress_time = Date.now();
-    bot.editMessageText(
+    await bot.editMessageText(
       generateDownloadMessage(
         header,
         `成功获取 Playlist 地址!`,
@@ -96,8 +100,8 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
     );
   };
 
-  const end = () => {
-    bot.editMessageText(
+  const end = async () => {
+    await bot.editMessageText(
       generateDownloadMessage(header, `成功获取 Playlist 地址!`, `下载成功!`),
       {
         chat_id: msg_playlist.chat.id,
@@ -106,9 +110,9 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
     );
 
     // Upload
-    ffmpeg.ffprobe(`./run/${id}.mp4`, function(err, data) {
+    ffmpeg.ffprobe(`./run/${id}.mp4`, async function(err, data) {
       const size = data.format.size / 1024 / 1024;
-      bot.editMessageText(
+      await bot.editMessageText(
         generateDownloadMessage(
           header,
           `成功获取 Playlist 地址!`,
@@ -121,7 +125,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
         }
       );
       if (size < 49.5) {
-        bot.editMessageText(
+        await bot.editMessageText(
           generateDownloadMessage(
             header,
             `成功获取 Playlist 地址!`,
@@ -134,7 +138,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
             message_id: msg_playlist.message_id
           }
         );
-        bot
+        await bot
           .sendVideo(msg.chat.id, createReadStream(`./run/${id}.mp4`), {
             caption: `HiBiKi Radio Station - ${id}`,
             duration: data.format.duration,
@@ -142,11 +146,11 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
           })
           .then(message => {
             // TODO: Store video id
-            unlink(`./run/${id}.mp4`, err => {
+            unlink(`./run/${id}.mp4`, async err => {
               if (err) {
                 console.error(`Can't remove file: ./run/${id}.mp4`);
 
-                bot.sendMessage(
+                await bot.sendMessage(
                   msg.chat.id,
                   `错误：无法移除已经发送至Telegram的本地视频，请通知管理员！`,
                   {
@@ -158,7 +162,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
           });
       } else {
         // TODO: Split file instead of saving it on server.
-        bot.sendMessage(
+        await bot.sendMessage(
           msg.chat.id,
           `文件过大，无法通过 Telegram 直接传输！\n请至 ${host}:${port}/${id}.mp4 下载！`,
           {
@@ -167,14 +171,14 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
         );
       }
 
-      bot.deleteMessage(
+      await bot.deleteMessage(
         msg_playlist.chat.id,
         msg_playlist.message_id.toString()
       );
     });
   };
-  const error = (err: any, stdout: any, stderr: any) => {
-    bot.editMessageText(
+  const error = async (err: any, stdout: any, stderr: any) => {
+    await bot.editMessageText(
       generateDownloadMessage(
         header,
         `成功获取 Playlist 地址!`,
