@@ -121,6 +121,19 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
         }
       );
       if (size < 49.5) {
+        bot.editMessageText(
+          generateDownloadMessage(
+            header,
+            `成功获取 Playlist 地址!`,
+            `下载成功!`,
+            `文件大小: ${size.toFixed(2)}M`,
+            `上传中……`
+          ),
+          {
+            chat_id: msg_playlist.chat.id,
+            message_id: msg_playlist.message_id
+          }
+        );
         bot
           .sendVideo(msg.chat.id, createReadStream(`./run/${id}.mp4`), {
             caption: id,
