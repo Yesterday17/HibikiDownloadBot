@@ -136,29 +136,28 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
         );
         bot
           .sendVideo(msg.chat.id, createReadStream(`./run/${id}.mp4`), {
-            caption: id,
-            duration: data.format.duration
+            caption: `HiBiKi Radio Station - ${id}`,
+            duration: data.format.duration,
+            reply_to_message_id: msg.message_id
           })
           .then(message => {
             // TODO: Store video id
             unlink(`./run/${id}.mp4`, err => {
-              console.log(error);
-              if (!err) return;
+              if (err) {
+                console.error(`Can't remove file: ./run/${id}.mp4`);
 
-              console.error(`Can't remove file: ./run/${id}.mp4`);
+                bot.sendMessage(
+                  msg.chat.id,
+                  `错误：无法移除已经发送至Telegram的本地视频，请通知管理员！`,
+                  {
+                    reply_to_message_id: msg_playlist.message_id
+                  }
+                );
+              }
 
-              bot.editMessageText(
-                generateDownloadMessage(
-                  header,
-                  `成功获取 Playlist 地址!`,
-                  `下载成功!`,
-                  `文件大小: ${size.toFixed(2)}M`,
-                  `错误：无法移除已经发送至Telegram的本地视频，请通知管理员！`
-                ),
-                {
-                  chat_id: msg_playlist.chat.id,
-                  message_id: msg_playlist.message_id
-                }
+              bot.deleteMessage(
+                msg_playlist.chat.id,
+                msg_playlist.message_id.toString()
               );
             });
           });
