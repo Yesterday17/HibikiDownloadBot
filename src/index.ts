@@ -142,6 +142,7 @@ bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
           .then(message => {
             // TODO: Store video id
             unlink(`./run/${id}.mp4`, err => {
+              console.log(error);
               if (!err) return;
 
               console.error(`Can't remove file: ./run/${id}.mp4`);
