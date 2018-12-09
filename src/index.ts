@@ -1,22 +1,29 @@
-import request from "request-promise";
-import ffmpeg from "fluent-ffmpeg";
 import TelegramBot from "node-telegram-bot-api";
-import { createReadStream, unlink } from "fs";
-import { host, port } from "./server";
+import { HiBikiDownload, HibikiDownloadCallback } from "./download";
+import { getDailyVoice, getPlaylistUrl } from "./request";
+import { generateDownloadMessage } from "./utils";
 
+/**
+ * Socks5 proxy, only used when debugging
+ */
 const socks5 = new (require("socks5-https-client/lib/Agent"))({
   socksHost: "127.0.0.1",
   socksPort: "1080"
 });
 
+/**
+ * Get Telegram Bot KEY
+ */
 if (process.env.HIBIKI_DOWNLOAD_BOT_KEY === undefined) {
   console.error(
     "Error: Environmental variable HIBIKI_DOWNLOAD_BOT_KEY is required."
   );
-  process.exit();
+  process.exit(1);
 }
 
-const header = `HibikiDownloadBot v1.0.0`;
+/**
+ * Proxy for debug
+ */
 const options: TelegramBot.ConstructorOptions = process.env.DEBUG
   ? {
       polling: true,
@@ -26,224 +33,90 @@ const options: TelegramBot.ConstructorOptions = process.env.DEBUG
       }
     }
   : { polling: true };
-const bot = new TelegramBot(process.env.HIBIKI_DOWNLOAD_BOT_KEY!, options);
 
-bot.onText(/\/playlist(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
-  const play = await getPlaylistUrl(match![1]);
+/**
+ * Bot Instance
+ */
+export const HiBiKiDownloadBot = new TelegramBot(
+  process.env.HIBIKI_DOWNLOAD_BOT_KEY!,
+  options
+);
 
-  if (play.error !== "") {
-    await bot.sendMessage(msg.chat.id, play.error, {
-      reply_to_message_id: msg.message_id
-    });
-    return;
+/**
+ * On command: /playlist <Bangumi ID>
+ */
+HiBiKiDownloadBot.onText(
+  /\/playlist(?:@[^ ]+)? ([0-9]+)/,
+  async (msg, match) => {
+    const play = await getPlaylistUrl(match![1]);
+
+    if (play.error !== "") {
+      await HiBiKiDownloadBot.sendMessage(msg.chat.id, play.error, {
+        reply_to_message_id: msg.message_id
+      });
+      return;
+    }
+
+    await HiBiKiDownloadBot.sendMessage(
+      msg.chat.id,
+      `广播ID: ${match![1]}\n请尽快[下载](${play.reply})以免链接失效!`,
+      { parse_mode: "Markdown", reply_to_message_id: msg.message_id }
+    );
   }
+);
 
-  await bot.sendMessage(
-    msg.chat.id,
-    `广播ID: ${match![1]}\n请尽快[下载](${play.url})以免链接失效!`,
-    { parse_mode: "Markdown", reply_to_message_id: msg.message_id }
-  );
-});
-
-bot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
+/**
+ * On command: /hibiki <Bangumi ID>
+ */
+HiBiKiDownloadBot.onText(/\/hibiki(?:@[^ ]+)? ([0-9]+)/, async (msg, match) => {
   const id: string = match![1];
   const play = await getPlaylistUrl(id);
 
   if (play.error !== "") {
-    await bot.sendMessage(
+    await HiBiKiDownloadBot.sendMessage(
       msg.chat.id,
-      generateDownloadMessage(header, play.error),
+      generateDownloadMessage(play.error),
       {
         reply_to_message_id: msg.message_id
       }
     );
     return;
   }
-  const msg_playlist = await bot.sendMessage(
+  const msg_playlist = await HiBiKiDownloadBot.sendMessage(
     msg.chat.id,
-    generateDownloadMessage(header, `成功获取 Playlist 地址!`),
+    generateDownloadMessage(`成功获取 Playlist 地址!`),
     {
       reply_to_message_id: msg.message_id
     }
   );
 
-  let progress_time = 0;
-
-  const start = async () => {
-    await bot.editMessageText(
-      generateDownloadMessage(
-        header,
-        `成功获取 Playlist 地址!`,
-        `开始下载……\n下载进度: 0.00%`
-      ),
-      {
-        chat_id: msg_playlist.chat.id,
-        message_id: msg_playlist.message_id
-      }
-    );
-  };
-
-  const progress = async (progress: any) => {
-    if (Date.now() - progress_time < 2000) return;
-
-    progress_time = Date.now();
-    await bot.editMessageText(
-      generateDownloadMessage(
-        header,
-        `成功获取 Playlist 地址!`,
-        `开始下载……\n下载进度: ${progress.percent.toFixed(2)}%`
-      ),
-      {
-        chat_id: msg_playlist.chat.id,
-        message_id: msg_playlist.message_id
-      }
-    );
-  };
-
-  const end = async () => {
-    await bot.editMessageText(
-      generateDownloadMessage(header, `成功获取 Playlist 地址!`, `下载成功!`),
-      {
-        chat_id: msg_playlist.chat.id,
-        message_id: msg_playlist.message_id
-      }
-    );
-
-    // Upload
-    ffmpeg.ffprobe(`./run/${id}.mp4`, async function(err, data) {
-      const size = data.format.size / 1024 / 1024;
-      await bot.editMessageText(
-        generateDownloadMessage(
-          header,
-          `成功获取 Playlist 地址!`,
-          `下载成功!`,
-          `文件大小: ${size.toFixed(2)}M`
-        ),
-        {
-          chat_id: msg_playlist.chat.id,
-          message_id: msg_playlist.message_id
-        }
-      );
-      if (size < 49.5) {
-        await bot.editMessageText(
-          generateDownloadMessage(
-            header,
-            `成功获取 Playlist 地址!`,
-            `下载成功!`,
-            `文件大小: ${size.toFixed(2)}M`,
-            `上传中……`
-          ),
-          {
-            chat_id: msg_playlist.chat.id,
-            message_id: msg_playlist.message_id
-          }
-        );
-        await bot
-          .sendVideo(msg.chat.id, createReadStream(`./run/${id}.mp4`), {
-            caption: `HiBiKi Radio Station - ${id}`,
-            duration: data.format.duration,
-            reply_to_message_id: msg.message_id
-          })
-          .then(message => {
-            // TODO: Store video id
-            unlink(`./run/${id}.mp4`, async err => {
-              if (err) {
-                console.error(`Can't remove file: ./run/${id}.mp4`);
-
-                await bot.sendMessage(
-                  msg.chat.id,
-                  `错误：无法移除已经发送至Telegram的本地视频，请通知管理员！`,
-                  {
-                    reply_to_message_id: message.message_id
-                  }
-                );
-              }
-            });
-          });
-      } else {
-        // TODO: Split file instead of saving it on server.
-        await bot.sendMessage(
-          msg.chat.id,
-          `文件过大，无法通过 Telegram 直接传输！\n请至 ${host}:${port}/${id}.mp4 下载！`,
-          {
-            reply_to_message_id: msg.message_id
-          }
-        );
-      }
-
-      await bot.deleteMessage(
-        msg_playlist.chat.id,
-        msg_playlist.message_id.toString()
-      );
-    });
-  };
-  const error = async (err: any, stdout: any, stderr: any) => {
-    await bot.editMessageText(
-      generateDownloadMessage(
-        header,
-        `成功获取 Playlist 地址!`,
-        `下载失败! 错误: ${stderr.message}`
-      ),
-      {
-        chat_id: msg_playlist.chat.id,
-        message_id: msg_playlist.message_id
-      }
-    );
-  };
-  download(id, play.url, { start, progress, end, error });
+  HiBikiDownload(id, play.reply, HibikiDownloadCallback(msg, msg_playlist, id));
 });
 
-function generateDownloadMessage(...args: string[]): string {
-  let ans = "";
-  for (const str of arguments) {
-    ans += `\n${str}`;
+HiBiKiDownloadBot.onText(/\/daily(?:@[^ ]+)?/, async (msg, match) => {
+  const response = await getDailyVoice();
+  if (response.error !== "") {
+    return;
   }
-  return ans.substring(1);
-}
 
-async function getPlaylistUrl(
-  id: string
-): Promise<{ error: string; url: string }> {
-  const body = await request.get(
-    `https://vcms-api.hibiki-radio.jp/api/v1/videos/play_check?video_id=${id}`,
+  const msg_playlist = await HiBiKiDownloadBot.sendMessage(
+    msg.chat.id,
+    generateDownloadMessage(`成功获取 Playlist 地址!`),
     {
-      headers: {
-        "X-Requested-With": "XMLHttpRequest"
-      }
+      reply_to_message_id: msg.message_id
     }
   );
-  if (!body) return { error: "发生错误！", url: "" };
 
-  const reply = JSON.parse(body);
-  if (!reply.playlist_url) {
-    return {
-      error: `无法获取下载地址!!!\nID: ${id}\n错误信息: ${reply.error_message}`,
-      url: ""
-    };
-  }
-  return { error: "", url: reply.playlist_url };
-}
-
-function download(
-  id: string,
-  url: string,
-  callbacks: {
-    start: () => void;
-    progress: (progress: any) => void;
-    end: () => void;
-    error: (...args: any[]) => void;
-  }
-) {
-  ffmpeg()
-    .input(url)
-    .videoCodec("libx264")
-    .videoBitrate(1000)
-    .audioCodec("libmp3lame")
-    .withAudioBitrate("128k")
-    .outputOptions("-strict -2")
-    .on("start", callbacks.start)
-    .on("progress", callbacks.progress)
-    .on("error", callbacks.error)
-    .on("end", callbacks.end)
-    .save(`./run/${id}.mp4`);
-}
+  const body = JSON.parse(response.reply);
+  const play = await getPlaylistUrl(body.video.id);
+  HiBikiDownload(
+    body.video.id,
+    play.reply,
+    HibikiDownloadCallback(
+      msg,
+      msg_playlist,
+      body.video.id,
+      `本日のつぶやき: ${body.name}`
+    )
+  );
+});
