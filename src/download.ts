@@ -87,7 +87,7 @@ export function HibikiDownloadCallback(
           origin.chat.id,
           createReadStream(`./run/${id}.mp4`),
           {
-            caption: name ? `HiBiKi Radio Station - ${id}` : name,
+            caption: name ? name : `HiBiKi Radio Station - ${id}`,
             duration: data.format.duration,
             reply_to_message_id: origin.message_id
           }
