@@ -20,12 +20,12 @@
 ## Docker
 
 ```bash
-docker pull yesterday17/HibikiDownloadBot
+docker pull yesterday17/hibiki-download-bot
 docker run --name hibiki-download-bot -p=SERVER_PORT:8080 -d \
            --env SERVER_HOST="SERVER_HOST" \
            --env SERVER_PORT="SERVER_PORT" \
            --env HIBIKI_DOWNLOAD_BOT_KEY="YOUR_TELEGRAM_TOKEN" \
-           yesterday17/HibikiDownloadBot
+           yesterday17/hibiki-download-bot
 ```
 
 ## Build Manually

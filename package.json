@@ -1,5 +1,5 @@
 {
-  "name": "HibikiDownloadBot",
+  "name": "hibiki-download-bot",
   "version": "1.0.0",
   "description": "A Telegram Bot",
   "main": "index.js",
