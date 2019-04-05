@@ -2,7 +2,7 @@ import ffmpeg from "fluent-ffmpeg";
 import { createReadStream, unlink } from "fs";
 import { Message } from "node-telegram-bot-api";
 import { HiBiKiDownloadBot } from "./index";
-import { host, port } from "./server";
+import { host } from "./server";
 import { generateDownloadMessage } from "./utils";
 
 export function HibikiDownloadCallback(
@@ -111,7 +111,8 @@ export function HibikiDownloadCallback(
         // TODO: Split file instead of saving it on server.
         await HiBiKiDownloadBot.sendMessage(
           origin.chat.id,
-          `文件过大，无法通过 Telegram 直接传输！\n请至 ${host}:${port}/${id}.mp4 下载！`,
+          `文件过大，无法通过 Telegram 直接传输！\n请至 ${host}:${process.env
+            .SERVER_PORT || "<Server_Port>"}/${id}.mp4 下载！`,
           {
             reply_to_message_id: origin.message_id
           }
