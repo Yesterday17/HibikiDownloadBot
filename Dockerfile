@@ -1,5 +1,5 @@
 FROM jrottenberg/ffmpeg:4.0-scratch AS ffmpeg
-FROM keymetrics/node:10-alpine
+FROM node:10-alpine
 
 LABEL maintainer="Yesterday17"
 
